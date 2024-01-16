@@ -1,0 +1,216 @@
+start docker:
+$open -a Docker (Docker setup)
+docker ps
+
+minikube start
+minikube status
+
+minikube ip 192.168.49.2
+ssh docker@192.168.49. - does not work if not using virtualbox
+
+ kubectl cluster-info     
+ kubectl get nodes
+  
+kubectl get namespaces 
+
+kubectl get pods (default is the default nam)
+kubectl get pods  --namespace=kube-system                                                                                                                                     ✔  minikube ⎈  18:11:49
+
+NAME                               READY   STATUS    RESTARTS        AGE
+coredns-787d4945fb-txf2t           1/1     Running   10 (264d ago)   302d
+etcd-minikube                      1/1     Running   11 (264d ago)   302d
+kube-apiserver-minikube            1/1     Running   11 (264d ago)   302d
+kube-controller-manager-minikube   1/1     Running   11 (264d ago)   302d
+kube-proxy-cm8hc                   1/1     Running   11 (264d ago)   302d
+kube-scheduler-minikube            1/1     Running   11 (264d ago)   302d
+storage-provisioner                1/1     Running   22 (14m ago)    302d
+
+kubectl run nginx --image=nginx                                                                                                                                           INT ✘  minikube ⎈  v
+pod/nginx created
+
+kubectl describe pod nginx                                                                                                                                                    ✔  minikube ⎈   
+Name:             nginx
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             minikube/192.168.49.2
+Start Time:       Tue, 16 Jan 2024 18:15:26 +0800
+Labels:           run=nginx
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.92
+IPs:
+  IP:  10.244.0.92
+Containers:
+  nginx:
+    Container ID:   docker://f8798d4032a74b0403a43deebd09e1949c16a86581cfe4a45416f725a09e97eb
+    Image:          nginx
+    Image ID:       docker-pullable://nginx@sha256:4c0fdaa8b6341bfdeca5f18f7837462c80cff90527ee35ef185571e1c327beac
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Tue, 16 Jan 2024 18:15:42 +0800
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-b2cmc (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  kube-api-access-b2cmc:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  3m36s  default-scheduler  Successfully assigned default/nginx to minikube
+  Normal  Pulling    3m36s  kubelet            Pulling image "nginx"
+  Normal  Pulled     3m21s  kubelet            Successfully pulled image "nginx" in 14.053948965s (14.053989006s including waiting)
+  Normal  Created    3m21s  kubelet            Created container nginx
+  Normal  Started    3m21s  kubelet            Started container nginx
+
+
+  docker ps
+   get the hash of nginx container running in the pod
+
+  docker exec -it 0cfc984d6c83 sh              
+  #hostname
+k3d-jan16-cluster-serverlb
+  #hostname -i
+172.19.0.4 
+
+ kubectl get pods -o wide   
+
+  kubectl delete pod nginx
+
+
+ k create deployment nginx-deployment --image=nginx 
+ 
+k describe deployment nginx-deployment                                                                                                              ✔  k3d-jan16-cluster ⎈  19:21:44 
+Name:                   nginx-deployment
+Namespace:              default
+CreationTimestamp:      Tue, 16 Jan 2024 19:20:39 +0800
+Labels:                 app=nginx-deployment
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=nginx-deployment
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=nginx-deployment
+  Containers:
+   nginx:
+    Image:        nginx
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   nginx-deployment-66fb7f764c (1/1 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  2m1s  deployment-controller  Scaled up replica set nginx-deployment-66fb7f764c to 1
+ 
+k get pods                                                                                                                                          ✔  k3d-jan16-cluster ⎈  19:22:40 
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-66fb7f764c-t5rcx   1/1     Running   0          7m32s
+  
+see NewReplicaSet above: nginx-deployment-66fb7f764c
+t5rcx is the has of the pod
+
+$k describe pod nginx-deployment-66fb7f764c-t5rcx
+
+k scale deployment nginx-deployment --replicas=5                                                                                                    ✔  k3d-jan16-cluster ⎈  19:31:02 
+deployment.apps/nginx-deployment scaled
+ ~/src/k8s/stashchuk  k get pods                                                                                                                                          ✔  k3d-jan16-cluster 
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-66fb7f764c-t5rcx   1/1     Running   0          12m
+nginx-deployment-66fb7f764c-gdhtl   1/1     Running   0          8s
+nginx-deployment-66fb7f764c-c2cmx   1/1     Running   0          8s
+nginx-deployment-66fb7f764c-kf46f   1/1     Running   0          8s
+nginx-deployment-66fb7f764c-jf99n   1/1     Running   0          8s
+
+
+ k get pods -o wide                                                                                                                                  ✔  k3d-jan16-cluster ⎈  19:33:11 
+NAME                                READY   STATUS    RESTARTS   AGE    IP           NODE                         NOMINATED NODE   READINESS GATES
+nginx-deployment-66fb7f764c-t5rcx   1/1     Running   0          14m    10.42.0.10   k3d-jan16-cluster-server-0   <none>           <none>
+nginx-deployment-66fb7f764c-gdhtl   1/1     Running   0          2m3s   10.42.0.12   k3d-jan16-cluster-server-0   <none>           <none>
+nginx-deployment-66fb7f764c-c2cmx   1/1     Running   0          2m3s   10.42.0.13   k3d-jan16-cluster-server-0   <none>           <none>
+nginx-deployment-66fb7f764c-kf46f   1/1     Running   0          2m3s   10.42.0.14   k3d-jan16-cluster-server-0   <none>           <none>
+nginx-deployment-66fb7f764c-jf99n   1/1     Running   0          2m3s   10.42.0.11   k3d-jan16-cluster-server-0   <none>           <none>
+
+ k scale deployment nginx-deployment --replicas=3                                                                                                    ✔  k3d-jan16-cluster ⎈  19:35:06 
+deployment.apps/nginx-deployment scaled
+ ~/src/k8s/stashchuk  k get pods -o wide                                                                                                                                  ✔  k3d-jan16-cluster 
+NAME                                READY   STATUS    RESTARTS   AGE     IP           NODE                         NOMINATED NODE   READINESS GATES
+nginx-deployment-66fb7f764c-t5rcx   1/1     Running   0          15m     10.42.0.10   k3d-jan16-cluster-server-0   <none>           <none>
+nginx-deployment-66fb7f764c-c2cmx   1/1     Running   0          3m26s   10.42.0.13   k3d-jan16-cluster-server-0   <none>           <none>
+nginx-deployment-66fb7f764c-kf46f   1/1     Running   0          3m26s   10.42.0.14   k3d-jan16-cluster-server-0   <none>           <none>
+ 
+k get deploy                                                                                                                                        ✔  k3d-jan16-cluster ⎈  19:36:29 
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   3/3     3            3           21m
+
+allow public to access nginx through a clusterIP service
+
+k expose deployment nginx-deployment --port=8080 --target-port=80                                                                                   ✔  k3d-jan16-cluster ⎈  19:44:43 
+service/nginx-deployment exposed
+
+k get svc                                                                                                                                           ✔  k3d-jan16-cluster ⎈  19:45:58 
+NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+kubernetes         ClusterIP   10.43.0.1       <none>        443/TCP    59m
+nginx-deployment   ClusterIP   10.43.228.106   <none>        8080/TCP   3m43s
+
+IP 10.43.228.106:8080 is available only from the cluster
+
+k describe service nginx-deployment                                                                                                       INT ✘  15s  k3d-jan16-cluster ⎈  19:50:02 
+Name:              nginx-deployment
+Namespace:         default
+Labels:            app=nginx-deployment
+Annotations:       <none>
+Selector:          app=nginx-deployment
+Type:              ClusterIP
+IP Family Policy:  SingleStack
+IP Families:       IPv4
+IP:                10.43.228.106
+IPs:               10.43.228.106
+Port:              <unset>  8080/TCP
+TargetPort:        80/TCP
+Endpoints:         10.42.0.10:80,10.42.0.13:80,10.42.0.14:80
+Session Affinity:  None
+Events:            <none>
+
+k delete deployment nginx-deployment                                                                                                                ✔  k3d-jan16-cluster ⎈  19:58:25 
+deployment.apps "nginx-deployment" deleted
+ ~/src/k8s/stashchuk  k delete service nginx-deployment                                                                                                                   ✔  k3d-jan16-cluster k
+service "nginx-deployment" deleted
+
+k get ns                                                                                                                                            ✔  k3d-jan16-cluster ⎈  19:59:46 
+NAME              STATUS   AGE
+default           Active   70m
+kube-system       Active   70m
+kube-public       Active   70m
+kube-node-lease   Active   70mk 
+
+
+https://github.com/bstashchuk/k8s
