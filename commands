@@ -1,3 +1,5 @@
+stashchik tutorial: https://www.youtube.com/watch?v=d6WC5n9G_sM&t=1803s
+
 start docker:
 $open -a Docker (Docker setup)
 docker ps
@@ -14,6 +16,8 @@ ssh docker@192.168.49. - does not work if not using virtualbox
 kubectl get namespaces 
 
 kubectl get pods (default is the default nam)
+
+
 kubectl get pods  --namespace=kube-system                                                                                                                                     ✔  minikube ⎈  18:11:49
 
 NAME                               READY   STATUS    RESTARTS        AGE
@@ -307,3 +311,185 @@ spec:
 
 targetPort is port of container
 port is the external port of the service
+
+k apply -f service.yaml                                                                                                                 ✔  k3d-jan16-cluster ⎈  10:26:26 
+service/k8s-web-hello created
+ ~/src/k8s/stashchuk  master !3  k get svc                                                                                                                               ✔  k3d-jan16-cluster ⎈  10:26:42 
+NAME            TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+kubernetes      ClusterIP      10.43.0.1       <none>        443/TCP          73m
+k8s-web-hello   LoadBalancer   10.43.220.140   172.19.0.3    3030:30481/TCP
+
+curl 172.19.0.3:30481 from inside the cluster
+what is k3s equivalent of minicube ip and minicube service k8s-web-hello?
+
+#delete deployment and service
+k delete -f deployment.yaml -f service.yaml 
+
+
+# create two deployment
+k8s-web-to-nginx  that will call k8s-web-hello
+
+create nginx.yaml that will create a service named yaml, clusterIP type not visible to public
+
+Public --> LoadBalancer --> k8s-web-to-nginx service ---> nginx service
+
+but Public to LoadBalancer does not work
+
+to check if k8s-web-to-nginx can find nginx service
+
+k exec k8s-web-to-nginx-765fc6b4dd-9pn6h -- nslookup nginx                                                                                 ✔  k3d-jan16-cluster ⎈  11:28:50 
+Server:         10.43.0.10
+Address:        10.43.0.10:53
+
+
+** server can't find nginx.svc.cluster.local: NXDOMAIN
+
+Name:   nginx.default.svc.cluster.local
+Address: 10.43.252.72
+
+** server can't find nginx.cluster.local: NXDOMAIN
+
+** server can't find nginx.svc.cluster.local: NXDOMAIN
+
+** server can't find nginx.cluster.local: NXDOMAIN
+
+command terminated with exit code 1
+
+the response
+Name:   nginx.default.svc.cluster.local
+Address: 10.43.252.72
+
+matches k get svc
+k get svc                                                                                                                                  ✔  k3d-jan16-cluster ⎈  11:37:09 
+NAME               TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+kubernetes         ClusterIP      10.43.0.1      <none>        443/TCP          145m
+k8s-web-to-nginx   LoadBalancer   10.43.5.31     172.19.0.3    3333:31241/TCP   12m
+nginx              ClusterIP      10.43.252.72   <none>        80/TCP           
+
+or 
+k describe service nginx                                                                                                                   ✔  k3d-jan16-cluster ⎈  11:38:40 
+Name:              nginx
+Namespace:         default
+Labels:            <none>
+Annotations:       <none>
+Selector:          app=nginx
+Type:              ClusterIP
+IP Family Policy:  SingleStack
+IP Families:       IPv4
+IP:                10.43.252.72
+IPs:               10.43.252.72
+Port:              <unset>  80/TCP
+TargetPort:        80/TCP
+Endpoints:         10.42.0.38:80,10.42.0.39:80,10.42.0.40:80 + 2 more...
+Session Affinity:  None
+Events:            <none>
+
+or 
+k exec k8s-web-to-nginx-765fc6b4dd-9pn6h -- nslookup k8s-web-to-nginx                                                            INT ✘  13s  k3d-jan16-cluster ⎈  11:44:29 
+Server:         10.43.0.10
+Address:        10.43.0.10:53
+
+** server can't find k8s-web-to-nginx.cluster.local: NXDOMAIN
+
+** server can't find k8s-web-to-nginx.cluster.local: NXDOMAIN
+
+
+** server can't find k8s-web-to-nginx.svc.cluster.local: NXDOMAIN
+
+** server can't find k8s-web-to-nginx.svc.cluster.local: NXDOMAIN
+
+Name:   k8s-web-to-nginx.default.svc.cluster.local
+Address: 10.43.5.31
+
+command terminated with exit code 1
+ ~/src/k8s/stashchuk  master  k get svc                                                                                                                                  ✔  k3d-jan16-cluster ⎈  11:44:49 
+NAME               TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+kubernetes         ClusterIP      10.43.0.1      <none>        443/TCP          152m
+k8s-web-to-nginx   LoadBalancer   10.43.5.31     172.19.0.3    3333:31241/TCP   19m
+nginx              ClusterIP      10.43.252.72   <none>        80/TCP           17m
+ ~/src/k8s/stashchuk  master                                                                                                                                                                   ✔  11:45:04 
+
+### get the response from nginx
+k exec k8s-web-to-nginx-765fc6b4dd-9pn6h -- wget -qO- http://nginx                                                                         ✔  k3d-jan16-cluster ⎈  11:40:23 
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+
+
+
+### try ingress
+
+
+use container run times cri-o or containerd instead of docker
+ tr
+ssh into minikube ip
+$sudo crictl ps # cri-o was specified as runtime
+
+next:
+1. install k3d on a linux box with max memory
+2. try highwater tutorial
+
+
+TESTING k3s documentation
+https://k3d.io/v5.4.6/usage/exposing_services/
+
+export KUBECONFIG="$(k3d kubeconfig write k3s-default)"
+
+
+k get svc                                                                                                                              ✔  k3d-k3s-default ⎈  13:13:28 
+NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.43.0.1     <none>        443/TCP   4m17s
+nginx        ClusterIP   10.43.21.64   <none>        80/TCP    4s
+
+k describe deployment nginx                                                                                                            ✔  k3d-k3s-default ⎈  13:13:49 
+Name:                   nginx
+Namespace:              default
+CreationTimestamp:      Wed, 17 Jan 2024 13:12:36 +0800
+Labels:                 app=nginx
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=nginx
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=nginx
+  Containers:
+   nginx:
+    Image:        nginx
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   nginx-77b4fdf86c (1/1 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  90s   deployment-controller  Scaled up replica set nginx-77b4fdf86c to 1
