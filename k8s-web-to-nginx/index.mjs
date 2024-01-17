@@ -10,6 +10,14 @@ app.get("/", (req,res) =>{
     res.send(helloMessage)
 })
 
+app.get("/nginx", async(req,res) => { 
+ 
+    const url = "http://nginx"
+    const response = await fetch(url);
+    const body = await response.text();
+    res.send(body)
+})
+
 app.listen(PORT, () => {
     console.log(`Web server is listening on port ${PORT}`)
 })
