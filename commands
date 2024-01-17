@@ -282,3 +282,28 @@ kubernetes documentation
 https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/deployment-v1/
 # alias for shortcut
 alias k=kubectl
+
+# apply deployment.yaml
+k apply -f deployment.yaml       
+
+# increase number of replicas, apply again
+k apply -f deployment.yaml       
+
+k get pods
+
+# service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-web-hello
+spec:
+  type: LoadBalancer
+  selector:
+    app: k8s-web-hello
+  ports:
+  - port: 3030
+    targetPort: 3000
+
+
+targetPort is port of container
+port is the external port of the service
