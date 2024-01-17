@@ -455,6 +455,12 @@ https://k3d.io/v5.4.6/usage/exposing_services/
 
 export KUBECONFIG="$(k3d kubeconfig write k3s-default)"
 
+when starting new cluster (not k3s-default) 
+k get pods -- result to The connection to the server 0.0.0.0:6550 was refused - did you specify the right host or port?
+
+this solved the problem
+export KUBECONFIG="$(k3d kubeconfig write jan16-cluster)" 
+
 
 k get svc                                                                                                                              ✔  k3d-k3s-default ⎈  13:13:28 
 NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
@@ -493,3 +499,13 @@ Events:
   Type    Reason             Age   From                   Message
   ----    ------             ----  ----                   -------
   Normal  ScalingReplicaSet  90s   deployment-controller  Scaled up replica set nginx-77b4fdf86c to 1
+
+  # k3s cluster management
+  k3d cluster  list                                                                                                                                                ✔  13:22:47 
+NAME            SERVERS   AGENTS   LOADBALANCER
+jan16-cluster   1/1       0/0      true
+k3s-default     1/1       2/2      true
+
+k3d cluster stop k3s-default 
+
+
