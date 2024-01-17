@@ -212,5 +212,73 @@ kube-system       Active   70m
 kube-public       Active   70m
 kube-node-lease   Active   70mk 
 
-
+g
 https://github.com/bstashchuk/k8s
+
+ docker build . -t randygit/k8s-web-hello          
+
+
+ docker push randygit/k8s-web-hello                                                                                                         ✔  4s  20:40:26 
+Using default tag: latest
+The push refers to repository [docker.io/randygit/k8s-web-hello]
+83842bcb21de: Pushed 
+923cc59bbb2e: Pushed 
+0a164ad362e3: Pushed 
+21baa53e78be: Pushed 
+56204a717790: Mounted from library/node 
+8ec6332cfe2c: Mounted from library/node 
+15fc11f5f499: Mounted from library/node 
+3ce819cc4970: Mounted from library/node 
+latest: digest: sha256:0bd723b6cbb0bd74ac4257b895715f4b4dbd4019493f085d41816558a67aeb2b size: 1991
+ ~/src/k8s/stashchuk/k8s-web-hello  master ?1  k get deploy                                                                                                        ✔  22s  k3d-jan16-cluster ⎈  20:41:53 
+No resources found in default namespace.
+ ~/src/k8s/stashchuk/k8s-web-hello  master ?1  k get svc                                                                                                                 ✔  k3d-jan16-cluster ⎈  20:46:21 
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.43.0.1    <none>        443/TCP   117m
+ ~/src/k8s/stashchuk/k8s-web-hello  master ?1  k create deployment k8s-web-hello --image=randygit/k8s-web-hello                                                          ✔  k3d-jan16-cluster ⎈  20:46:26 
+deployment.apps/k8s-web-hello created
+ ~/src/k8s/stashchuk/k8s-web-hello  master ?1  k get pods                                                                                                                ✔  k3d-jan16-cluster ⎈  20:48:51 
+NAME                             READY   STATUS    RESTARTS   AGE
+k8s-web-hello-6864864454-6cxkm   1/1     Running   0          27s
+ ~/src/k8s/stashchuk/k8s-web-hello  master ?1  k expose deployment k8s-web-hello  --port=3000                                                                            ✔  k3d-jan16-cluster ⎈  20:49:18 
+service/k8s-web-hello exposed
+ ~/src/k8s/stashchuk/k8s-web-hello  master ?1  k get svc                                                                                                                 ✔  k3d-jan16-cluster ⎈  20:51:19 
+NAME            TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+kubernetes      ClusterIP   10.43.0.1      <none>        443/TCP    122m
+k8s-web-hello   ClusterIP   10.43.24.170   <none>        3000/TCP   4s
+ ~/src/k8s/stashchuk/k8s-web-hello  master ?1                        
+
+ k expose deployment k8s-web-hello  --type=NodePort --port=3000                                                            ✔  k3d-jan16-cluster ⎈  21:05:20 
+service/k8s-web-hello exposed
+ ~/src/k8s/stashchuk/k8s-web-hello  master ?1  k get svc                                                                                                                 ✔  k3d-jan16-cluster ⎈  21:06:08 
+NAME            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+kubernetes      ClusterIP   10.43.0.1       <none>        443/TCP          137m
+k8s-web-hello   NodePort    10.43.129.222   <none>        3000:31652/TCP   6s
+
+you can now use the nodeport address from outside k8s
+
+equivalent to minikube ip
+kubectl get -n kube-system service/traefik -o jsonpath="{.status.loadBalancer.ingress[0].ip}"                             ✔  k3d-jan16-cluster ⎈  21:06:14 
+
+172.19.0.3%    
+
+
+#upload new version:
+k set image deployment k8s-web-hello k8s-web-hello=randygit/k8s-web-hello:2.0.0 
+#get status of deployment
+kubectl rollout status deploy k8s-web-hello  
+
+delete all deployments, svc, pods in the default namespace
+k delete all --all   
+
+
+# to test docker image locally
+docker run -p 80:3000 randygit/k8s-web-hello 
+
+docker ps -a  
+
+
+kubernetes documentation
+https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/deployment-v1/
+# alias for shortcut
+alias k=kubectl
